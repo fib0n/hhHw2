@@ -60,7 +60,7 @@ public class Daemon {
                 String response = getResponse(request);
                 connections.stream().forEach(c -> {
                     try {
-                        c.out.println(response);
+                        c.writeResponse(response);
                     } catch (Exception e) {
                         System.err.println(e);
                         c.close();
@@ -72,8 +72,12 @@ public class Daemon {
                 close();
             }
         }
-
-        public void close() {
+        
+        private synchronized void writeResponse(String response){
+            out.println(response);
+        }
+        
+        public synchronized void close() {
             try {
                 if (in != null) {
                     in.close();

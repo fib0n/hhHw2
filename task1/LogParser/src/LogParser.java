@@ -28,7 +28,7 @@ public class LogParser {
                 .entrySet()
                 .stream()
                 .sorted((a, b) -> -Long.compare(a.getValue()[0], b.getValue()[0]))
-                .map(u -> new SimpleEntry<Integer, Duration>(u.getKey(), Duration.ofMillis(u.getValue()[0])));
+                .map(u -> new SimpleEntry<Integer, Duration>(u.getKey(), Duration.ofSeconds(u.getValue()[0])));
 
         print(stats);
     }
