@@ -1,7 +1,11 @@
-import java.io.*;
+import java.time.Duration;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.time.Duration;
 import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 
@@ -15,8 +19,10 @@ public class LogParser {
         String file = args[0];
 
         Map<Integer, long[]> users = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            for (String line; (line = br.readLine()) != null;) {
+        Path path = Paths.get(file);
+        try (Scanner scanner = new Scanner(path, StandardCharsets.UTF_8.name())) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
                 String[] splitted = line.toLowerCase().split(", ");
                 Long time = Long.valueOf(splitted[0]);
                 Integer id = Integer.valueOf(splitted[1]);
