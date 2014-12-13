@@ -1,26 +1,34 @@
-import java.time.Duration;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.time.Duration;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 
+/**
+ *
+ * @author Andrey Ivanov
+ */
 public class LogParser {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(final String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println("usage: java LogParser logFilePath");
             return;
         }
-        String file = args[0];
 
-        Map<Integer, long[]> users = new HashMap<>();
+        String file = args[0];
         Path path = Paths.get(file);
-        try (Scanner scanner = new Scanner(path, StandardCharsets.UTF_8.name())) {
+        Map<Integer, long[]> users = new HashMap<>();
+
+        try (Scanner scanner = new Scanner(
+                path, StandardCharsets.UTF_8.name())) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] splitted = line.toLowerCase().split(", ");
@@ -33,13 +41,17 @@ public class LogParser {
         Stream<SimpleEntry<Integer, Duration>> stats = users
                 .entrySet()
                 .stream()
-                .sorted((a, b) -> -Long.compare(a.getValue()[0], b.getValue()[0]))
-                .map(u -> new SimpleEntry<Integer, Duration>(u.getKey(), Duration.ofSeconds(u.getValue()[0])));
-
+                .sorted((a, b) -> -Long.compare(
+                                a.getValue()[0], b.getValue()[0]))
+                .map(u -> new SimpleEntry<Integer, Duration>(
+                                u.getKey(),
+                                Duration.ofSeconds(u.getValue()[0])));
         print(stats);
     }
 
-    private static void updateUser(Integer id, long time, String event, Map<Integer, long[]> users) {
+    private static void updateUser(final Integer id,
+            final long time, final String event,
+            final Map<Integer, long[]> users) {
 
         if (!users.containsKey(id)) {
             users.put(id, new long[]{0L, 0L});
@@ -57,14 +69,17 @@ public class LogParser {
         }
     }
 
-    private static void print(Stream<SimpleEntry<Integer, Duration>> stats) {
+    private static void print(
+            final Stream<SimpleEntry<Integer, Duration>> stats) {
         int lineCount = 0;
         final int lineMaxCount = 30;
 
         for (SimpleEntry<Integer, Duration> user : stats.collect(toList())) {
             if (lineCount >= lineMaxCount) {
                 lineCount = 0;
-                System.out.printf("Next %d rows? press 'Enter'. Exit? press 'q' ", lineMaxCount);
+                System.out.printf(
+                        "Next %d rows? press 'Enter'. Exit? press 'q' ",
+                        lineMaxCount);
                 Scanner scanner = new Scanner(System.in);
                 String key = scanner.nextLine();
                 if ("q".equals(key)) {
@@ -73,7 +88,8 @@ public class LogParser {
             }
             ++lineCount;
             Duration duration = user.getValue();
-            System.out.printf("(userId = %d): %d.%02d:%02d:%02d\n", user.getKey(),
+            System.out.printf("(userId = %d): %d.%02d:%02d:%02d\n",
+                    user.getKey(),
                     duration.toDays(),
                     duration.toHours() % 24,
                     duration.toMinutes() % 60,
