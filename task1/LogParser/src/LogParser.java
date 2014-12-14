@@ -1,7 +1,10 @@
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.AbstractMap.SimpleEntry;
@@ -22,20 +25,29 @@ public class LogParser {
             System.err.println("usage: java LogParser logFilePath");
             return;
         }
-
-        String file = args[0];
-        Path path = Paths.get(file);
         Map<Integer, long[]> users = new HashMap<>();
+        try (ReadableByteChannel channel = Files.newByteChannel(
+                Paths.get(args[0]))) {
+            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1 << 13);
+            Charset charset = Charset.forName(System.getProperty("file.encoding"));
+            char delim = System.getProperty("line.separator").charAt(0);
 
-        try (Scanner scanner = new Scanner(
-                path, StandardCharsets.UTF_8.name())) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] splitted = line.toLowerCase().split(", ");
-                Long time = Long.valueOf(splitted[0]);
-                Integer id = Integer.valueOf(splitted[1]);
-                updateUser(id, time, splitted[2], users);
+            StringBuilder line = new StringBuilder();
+            while (channel.read(byteBuffer) > 0) {
+                byteBuffer.rewind();
+                CharBuffer charBuffer = charset.decode(byteBuffer);
+                while (charBuffer.hasRemaining()) {
+                    char symbol = charBuffer.get();
+                    if (symbol == delim) {
+                        updateUser(line.toString(), users);
+                        line = new StringBuilder();
+                    } else {
+                        line.append(symbol);
+                    }
+                }
+                byteBuffer.flip();
             }
+            updateUser(line.toString(), users);
         }
 
         Stream<SimpleEntry<Integer, Duration>> stats = users
@@ -49,9 +61,19 @@ public class LogParser {
         print(stats);
     }
 
-    private static void updateUser(final Integer id,
-            final long time, final String event,
+    private static void updateUser(String data,
             final Map<Integer, long[]> users) {
+        if (data == null) {
+            return;
+        }
+        String[] splitted = data.toLowerCase().split(", ");
+        if (splitted.length < 3) {
+            return;
+        }
+
+        Long time = Long.valueOf(splitted[0]);
+        Integer id = Integer.valueOf(splitted[1]);
+        String event = splitted[2];
 
         if (!users.containsKey(id)) {
             users.put(id, new long[]{0L, 0L});

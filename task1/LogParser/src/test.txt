@@ -5,4 +5,4 @@
 2, 12, login
 4, 12, logout
 6, 100, logout
-77760000, 1, logout
+86400, 1, logout
