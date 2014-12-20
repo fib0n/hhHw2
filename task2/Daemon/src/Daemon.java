@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -72,11 +73,11 @@ public class Daemon {
                 close();
             }
         }
-        
-        private synchronized void writeResponse(String response){
+
+        private synchronized void writeResponse(String response) {
             out.println(response);
         }
-        
+
         public synchronized void close() {
             try {
                 if (in != null) {
